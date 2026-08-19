@@ -24,8 +24,14 @@ export default function App() {
   const needsOnboarding = !profile && location.pathname !== '/onboarding'
   if (needsOnboarding) return <Navigate to="/onboarding" replace />
 
-  const needsClass =
-    profile && !profile.activeClassId && !['/class-setup', '/onboarding', '/settings'].includes(location.pathname)
+  // Note: needsClass already implies profile is truthy, i.e. onboarding is
+  // done — so unlike needsOnboarding above, /onboarding is deliberately NOT
+  // excluded here. That makes routing self-healing if navigate() from the
+  // onboarding form ever fails to stick (e.g. racing a re-render from the
+  // same write that created the profile): the very next render sees a
+  // profile without an active class and correctly redirects onward, rather
+  // than leaving the app stuck showing the onboarding form indefinitely.
+  const needsClass = profile && !profile.activeClassId && !['/class-setup', '/settings'].includes(location.pathname)
   if (needsClass) return <Navigate to="/class-setup" replace />
 
   if (location.pathname === '/onboarding') {
