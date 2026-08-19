@@ -26,25 +26,14 @@ export const db = new ClassmateDB()
 
 const DB_NAME = 'classmate-db'
 
-/**
- * Opening or deleting an IndexedDB database can hang *indefinitely* — by
- * spec, not as a bug — when another tab/connection still has it open at an
- * older version: the browser just waits for that connection to close rather
- * than erroring. Racing any such call against a timeout turns that into "try
- * again" instead of a frozen app.
- */
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => setTimeout(() => reject(new Error('timed out')), timeoutMs)),
-  ])
-}
-
 function deleteDatabase(name: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const req = indexedDB.deleteDatabase(name)
     req.onsuccess = () => resolve()
     req.onerror = () => reject(req.error)
+    // Blocked means another tab still has the (incompatible) database open —
+    // there's nothing destructive to finish here since deletion hasn't
+    // happened, so it's safe to just give up waiting rather than hang.
     req.onblocked = () => resolve()
   })
 }
@@ -54,31 +43,27 @@ function deleteDatabase(name: string): Promise<void> {
  * project hosted under that account, and IndexedDB is scoped to the origin,
  * not the path — so a same-named leftover database from anything else ever
  * served at this origin could in principle already exist with an
- * incompatible schema, silently breaking every write with no visible error.
- * Try opening normally first; if that fails or hangs, wipe and recreate
- * rather than leaving the app stuck.
+ * incompatible (newer) schema version, which permanently breaks every write
+ * with no visible error. That is the ONLY condition this recovers from by
+ * deleting local data: a real `VersionError` from actually trying to open.
+ *
+ * Everything else — a slow open, another tab holding the database open,
+ * a transient failure — is left alone and simply surfaces to the caller.
+ * A slow/blocked open is not evidence of corruption, and treating it as
+ * such would delete a real user's data on nothing more than a slow device
+ * or a flaky connection, which is far worse than leaving them to retry.
  */
 export async function ensureCompatibleDatabase(): Promise<void> {
-  const ATTEMPTS = 3
-  let lastError: unknown
-
-  for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
-    try {
-      await withTimeout(db.open(), 2500)
-      return
-    } catch (err) {
-      lastError = err
-      db.close()
-      await withTimeout(deleteDatabase(DB_NAME), 2500).catch(() => {})
-      // Re-opening immediately after a delete can transiently fail while the
-      // browser finishes tearing down the old database — a short backoff
-      // before the next attempt absorbs that instead of giving up on it.
-      if (attempt < ATTEMPTS) await new Promise((resolve) => setTimeout(resolve, 400 * attempt))
-    }
+  try {
+    await db.open()
+    return
+  } catch (err) {
+    if (!(err instanceof Dexie.VersionError)) throw err
   }
 
-  console.error('ClassMates: could not open local database after retries', lastError)
-  throw lastError
+  db.close()
+  await deleteDatabase(DB_NAME)
+  await db.open()
 }
 
 export function uid(): string {
