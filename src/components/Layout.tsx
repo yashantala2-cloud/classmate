@@ -21,7 +21,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         <div className="hero-inner">
           <div className="brand">
             <div className="brand-logo">
-              <img src="/logo.svg" alt="" />
+              <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="" />
             </div>
             <div>
               <div className="brand-name">ClassMates</div>
