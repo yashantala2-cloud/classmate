@@ -34,6 +34,8 @@ export interface Subject {
   classId: string
   name: string
   code: string
+  /** Credit weight used only to determine Overall rank order across subjects; displayed marks are always unweighted. */
+  credits: number
 }
 
 export interface Exam {

@@ -34,10 +34,14 @@ export default function Rankings() {
     return map
   }, [subjectId, overallExamIds.join(',')]) ?? new Map<string, Map<string, MarkEntry>>()
 
+  const examCredits = new Map(
+    exams.map((e) => [e.id, subjects.find((s) => s.id === e.subjectId)?.credits ?? 1]),
+  )
+
   let rankRows: RankRow[] = []
   let title = ''
   if (subjectId === OVERALL) {
-    rankRows = computeAggregateRanking(students, overallExamIds, overallMarks)
+    rankRows = computeAggregateRanking(students, overallExamIds, overallMarks, examCredits)
     title = `Overall — ${EXAM_LABELS[examType]}`
   } else if (singleExam) {
     rankRows = computeRanking(students, singleMarks)
@@ -67,6 +71,11 @@ export default function Rankings() {
           ))}
         </select>
       </div>
+      {subjectId === OVERALL && (
+        <p className="text-xs text-ink-faint mb-3">
+          Rank order is weighted by each subject's credits. Marks shown are always the actual total scored.
+        </p>
+      )}
       <div className="flex flex-wrap gap-1.5 mb-4">
         {EXAM_TYPES.map((t) => (
           <button

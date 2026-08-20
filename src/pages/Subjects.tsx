@@ -13,13 +13,28 @@ export default function Subjects() {
   const [adding, setAdding] = useState(false)
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
+  const [credits, setCredits] = useState('1')
 
   async function addSubject() {
     if (!activeClass || !name.trim()) return
-    await db.subjects.add({ id: uid(), classId: activeClass.id, name: name.trim(), code: code.trim() })
+    const parsedCredits = Number(credits)
+    await db.subjects.add({
+      id: uid(),
+      classId: activeClass.id,
+      name: name.trim(),
+      code: code.trim(),
+      credits: Number.isFinite(parsedCredits) && parsedCredits > 0 ? parsedCredits : 1,
+    })
     setName('')
     setCode('')
+    setCredits('1')
     setAdding(false)
+  }
+
+  async function updateCredits(subjectId: string, value: string) {
+    const parsed = Number(value)
+    if (!Number.isFinite(parsed) || parsed <= 0) return
+    await db.subjects.update(subjectId, { credits: parsed })
   }
 
   async function removeSubject(subjectId: string) {
@@ -59,6 +74,17 @@ export default function Subjects() {
             placeholder="Subject code (optional)"
             className="w-full border border-paper-line rounded-md px-3 py-2 text-sm outline-none focus:border-navy-700"
           />
+          <div>
+            <label className="block text-xs font-medium text-ink-dim mb-1">Credits</label>
+            <input
+              value={credits}
+              onChange={(e) => setCredits(e.target.value.replace(/[^\d.]/g, ''))}
+              inputMode="decimal"
+              placeholder="1"
+              className="w-24 border border-paper-line rounded-md px-3 py-2 text-sm outline-none focus:border-navy-700"
+            />
+            <p className="text-xs text-ink-faint mt-1">Weights this subject in the Overall ranking only.</p>
+          </div>
           <div className="flex gap-2">
             <button onClick={addSubject} className="bg-navy-900 text-white text-sm font-medium px-4 py-2 rounded-md">
               Save
@@ -88,6 +114,15 @@ export default function Subjects() {
                   Remove
                 </button>
               </div>
+              <label className="flex items-center gap-1.5 mt-2 text-xs text-ink-dim">
+                Credits
+                <input
+                  defaultValue={s.credits ?? 1}
+                  onBlur={(e) => updateCredits(s.id, e.target.value)}
+                  inputMode="decimal"
+                  className="w-14 border border-paper-line rounded px-1.5 py-0.5 text-xs outline-none focus:border-navy-700"
+                />
+              </label>
               <div className="flex flex-wrap gap-1.5 mt-3">
                 {EXAM_TYPES.map((type) => {
                   const exam = subjectExams.find((e) => e.type === type)

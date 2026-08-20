@@ -40,7 +40,7 @@ export async function extractImageTokens(
       for (const paragraph of block.paragraphs) {
         for (const line of paragraph.lines) {
           for (const w of line.words) {
-            words.push({ text: w.text, x: w.bbox.x0, y: -w.bbox.y0 })
+            words.push({ text: w.text, x: w.bbox.x0, y: -w.bbox.y0, height: w.bbox.y1 - w.bbox.y0 })
           }
         }
       }

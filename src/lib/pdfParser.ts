@@ -26,7 +26,8 @@ export async function extractPdfRows(file: File): Promise<string[][]> {
     const words: PositionedWord[] = []
     for (const item of content.items) {
       if (!('str' in item) || !item.str.trim()) continue
-      words.push({ text: item.str, x: item.transform[4], y: item.transform[5] })
+      const height = 'height' in item && item.height > 0 ? item.height : Math.abs(item.transform[3])
+      words.push({ text: item.str, x: item.transform[4], y: item.transform[5], height })
     }
     allRows.push(...reconstructRows(words))
   }

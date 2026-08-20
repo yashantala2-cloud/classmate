@@ -8,6 +8,8 @@ export interface PositionedWord {
   text: string
   x: number
   y: number
+  /** Glyph bounding-box height. Required for correct row clustering — see reconstructRows. */
+  height: number
 }
 
 /**
@@ -17,11 +19,19 @@ export interface PositionedWord {
  * (rather than flattened) because roster columns like Sr.No/EnrollmentNo/
  * Semester also contain digits, and only row position reliably separates one
  * student's fields from the next.
+ *
+ * The row tolerance is derived from each word's own glyph height, not from
+ * gaps between sorted y-positions. A dense row (e.g. 12 OCR words on one
+ * table row) produces far more small within-row y gaps than genuine
+ * between-row gaps, so a gap-based median collapses toward "distance between
+ * adjacent words on the same line" — a few pixels — and every word becomes
+ * its own row. Glyph height doesn't have that failure mode: it's stable
+ * regardless of how many words share a row.
  */
 export function reconstructRows(words: PositionedWord[]): string[][] {
   if (words.length === 0) return []
   const sorted = [...words].sort((a, b) => b.y - a.y)
-  const rowTolerance = medianWordHeight(sorted) * 0.6 || 4
+  const rowTolerance = medianHeight(sorted) * 0.6 || 4
 
   const rows: PositionedWord[][] = []
   let currentRow: PositionedWord[] = [sorted[0]]
@@ -56,16 +66,10 @@ export function reconstructReadingOrder(words: PositionedWord[]): string[] {
   return reconstructRows(words).flat()
 }
 
-function medianWordHeight(words: PositionedWord[]): number {
-  const ys = words.map((w) => w.y).sort((a, b) => a - b)
-  const gaps: number[] = []
-  for (let i = 1; i < ys.length; i++) {
-    const gap = Math.abs(ys[i] - ys[i - 1])
-    if (gap > 0.5) gaps.push(gap)
-  }
-  if (gaps.length === 0) return 0
-  gaps.sort((a, b) => a - b)
-  return gaps[Math.floor(gaps.length / 2)]
+function medianHeight(words: PositionedWord[]): number {
+  const heights = words.map((w) => w.height).filter((h) => h > 0.5).sort((a, b) => a - b)
+  if (heights.length === 0) return 0
+  return heights[Math.floor(heights.length / 2)]
 }
 
 const MARKS_RE = /^\d{1,3}(\.\d+)?$/
