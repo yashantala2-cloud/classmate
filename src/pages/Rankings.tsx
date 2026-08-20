@@ -132,7 +132,10 @@ export default function Rankings() {
               <div key={r.rollNo} className={`student-row ${r.rollNo === profile?.rollNo ? 'me' : ''}`}>
                 <span className={`rank ${r.rank !== null && r.rank <= 3 ? `medal m${r.rank}` : ''}`}>{r.rank ?? '—'}</span>
                 <span className={`avatar ${AVATAR_TONES[i % AVATAR_TONES.length]}`}>{r.name.charAt(0).toUpperCase()}</span>
-                <span className="student-name">{r.name}</span>
+                <span className="student-name">
+                  <span className="student-name-text">{r.name}</span>
+                  {r.rollNo === profile?.rollNo && <em className="you-badge">YOU</em>}
+                </span>
                 <span className="roll-cell">{r.rollNo}</span>
                 <strong>{r.absent ? 'AB' : (r.marks ?? '—')}</strong>
               </div>

@@ -103,7 +103,8 @@ button { cursor: pointer; }
 .table-head { background: #f2ede1; color: #526073; padding: 17px 20px; font-size: 15px; }
 .student-row { min-height: 73px; border-top: 1px solid #e7e4db; padding: 0 20px; font-size: 17px; }
 .student-row.me { background: #fff8e6; }
-.student-row .student-name { grid-column: 2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-left: 0; }
+.student-row .student-name { grid-column: 2; display: flex; align-items: center; min-width: 0; margin-left: 0; }
+.student-name-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; margin-left: 5px; grid-column: 2; justify-self: start; transform: translateX(0); font-weight: 700; }
 .student-name { padding-left: 43px; }
 .a0 { background: #eee4ff; color: #6c4bc4; }
@@ -111,6 +112,7 @@ button { cursor: pointer; }
 .a2 { background: #e8f8e9; color: #36a060; }
 .a3 { background: #fff2d8; color: #c47a15; }
 .a4 { background: #ffe5f0; color: #d44787; }
+.you-badge { font-style: normal; flex: 0 0 auto; margin-left: 8px; padding: 2px 7px; border-radius: 20px; background: var(--gold); color: #4a3600; font-size: 10px; font-weight: 700; letter-spacing: .3px; }
 .roll-cell { color: #718093; }
 .student-row > strong { text-align: right; }
 .rank { font-weight: 600; color: #536173; }
@@ -238,12 +240,21 @@ button { cursor: pointer; }
 .exam-pill.done { background: var(--navy); border-color: var(--navy); color: #fff; }
 
 @media (max-width: 640px) {
-  .hero { height: 126px; } .hero-inner { padding: 18px 22px; } .brand-name { font-size: 29px; } .brand-logo { width: 52px; } .brand-logo img { width: 48px; } .brand-class { font-size: 14px; } .roll span { font-size: 11px; } .roll strong { font-size: 28px; }
-  .screen { width: calc(100% - 28px); padding-top: 30px; } .welcome h1, .page-heading h1 { font-size: 31px; } .welcome p { font-size: 16px; } .stats { gap: 12px; } .stat { padding: 19px 15px; min-height: 145px; gap: 11px; } .stat-icon { width: 45px; height: 45px; flex-basis: 45px; } .stat-content b { font-size: 36px; } .stat-content > span { font-size: 15px; } .stat-content small { font-size: 12px; }
-  .action-card { min-height: 102px; padding: 14px 15px; gap: 14px; } .action-icon { width: 53px; height: 53px; flex-basis: 53px; } .action-copy b { font-size: 18px; } .action-copy span { font-size: 13px; } .action-arrow { width: 20px; } .motivation { padding: 18px; } .target { display: none; }
-  .page-heading { gap: 12px; margin-bottom: 23px; } .heading-icon { width: 48px; height: 48px; flex-basis: 48px; } .progress-heading { align-items: flex-start; } .progress-heading > div:last-child p, .upload-heading > div:last-child p { font-size: 15px; } .select { height: 70px; font-size: 17px; } .chips { gap: 9px; margin: 20px 0; } .chips button { padding: 11px 18px; font-size: 15px; }
-  .rank-summary { padding: 24px 20px; gap: 18px; } .rank-summary label { font-size: 12px; } .rank-summary strong { font-size: 36px; } .rank-summary span { font-size: 12px; } .summary-trophy { width: 75px; right: -5px; } .leaderboard { overflow-x: auto; } .table-head, .student-row { grid-template-columns: 50px minmax(180px,1fr) 55px 65px; min-width: 470px; } .table-head { font-size: 12px; } .student-row { font-size: 15px; }
-  .progress-card { padding: 20px 15px; } .subject-icon { left: 15px; top: 20px; width: 48px; height: 48px; } .subject-title { padding-left: 62px; } .subject-title > b { font-size: 22px; } .subject-title > span { font-size: 12px; margin-top: 20px; } .details { right: 15px; top: 20px; padding: 9px 11px; font-size: 12px; } .chart { height: 190px; margin-top: 4px; }
-  .exam-grid { gap: 10px; } .exam-card { min-height: 100px; padding: 14px; font-size: 15px; gap: 10px; } .exam-icon { width: 42px; height: 42px; border-radius: 13px; } .input-wrap { height: 70px; } .help { font-size: 14px; } .continue { height: 74px; }
-  .profile-card { padding: 20px; } .backup-card, .danger-card { padding: 20px; } .section-title h2 { font-size: 25px; } .class-card { height: 68px; font-size: 16px; } .backup-actions { gap: 9px; } .backup-actions button { font-size: 13px; } .app-info { padding: 17px; } .app-info p, .app-info a { font-size: 13px; } .bottom-nav { height: 82px; } .bottom-nav button, .bottom-nav a { font-size: 12px; }
+  .hero { height: 100px; border-bottom-width: 3px; } .hero-inner { padding: 14px 16px; } .brand { gap: 10px; } .brand-logo, .brand-logo img { width: 44px; height: 44px; } .brand-name { font-size: 25px; } .brand-class { font-size: 12px; margin-top: 4px; } .roll span { font-size: 10px; } .roll strong { font-size: 25px; }
+  .screen { width: calc(100% - 30px); padding-top: 21px; padding-bottom: 100px; } .welcome h1, .page-heading h1 { font-size: 28px; } .welcome { margin-bottom: 18px; } .welcome p { font-size: 14px; margin-top: 7px; }
+  .stats { gap: 10px; } .stat { min-height: 108px; padding: 14px; gap: 10px; border-radius: 16px; } .stat-icon { width: 42px; height: 42px; flex-basis: 42px; } .stat-content b { font-size: 32px; } .stat-content > span { font-size: 13px; margin-top: 7px; } .stat-content small { display: none; }
+  .actions { gap: 10px; margin-top: 18px; } .action-card { min-height: 78px; padding: 11px 13px; gap: 12px; border-radius: 16px; } .action-icon { width: 44px; height: 44px; flex-basis: 44px; border-radius: 13px; } .action-copy b { font-size: 16px; } .action-copy span { font-size: 12px; margin-top: 3px; } .target { display: none; }
+  .select { height: 60px; border-radius: 15px; font-size: 16px; } .chips { gap: 7px; margin: 15px 0; } .chips button { padding: 9px 14px; font-size: 13px; }
+  .rank-summary { min-height: 108px; padding: 19px 17px; border-radius: 18px; } .rank-summary label { font-size: 10px; } .rank-summary strong { font-size: 31px; } .rank-summary span { font-size: 11px; }
+  .leaderboard { overflow-x: auto; } .table-head, .student-row { grid-template-columns: 46px minmax(140px,1fr) 50px 60px; min-width: 340px; } .student-row { min-height: 58px; } .table-head { padding: 12px 14px; } .student-row { padding: 0 14px; }
+  .progress-card { padding: 16px 13px; border-radius: 17px; } .subject-icon { left: 13px; top: 16px; width: 44px; height: 44px; } .subject-title { padding-left: 55px; padding-right: 92px; } .subject-title > b { font-size: 20px; } .subject-title > span { font-size: 11px; margin-top: 15px; } .details { right: 13px; top: 16px; padding: 7px 9px; font-size: 11px; } .chart { height: 145px; }
+  .field-label { font-size: 15px; margin: 17px 0 7px; } .exam-grid { gap: 8px; } .exam-card { min-height: 72px; padding: 10px 11px; border-radius: 14px; font-size: 13px; } .exam-icon { width: 36px; height: 36px; } .input-wrap { height: 60px; border-radius: 14px; } .input-wrap input { font-size: 16px; } .help { font-size: 12px; } .continue { height: 56px; border-radius: 14px; font-size: 17px; }
+  .profile-card, .backup-card, .danger-card { padding: 16px; border-radius: 17px; } .profile-card .input-wrap { height: 60px; } .save { min-height: 48px; padding: 10px 18px; font-size: 15px; }
+  .class-card { height: 60px; border-radius: 14px; font-size: 15px; } .add-class { height: 58px; border-radius: 14px; font-size: 15px; } .backup-actions button { height: 54px; border-radius: 13px; font-size: 12px; } .clear { height: 54px; border-radius: 13px; } .app-info { padding: 14px; border-radius: 15px; }
+  .bottom-nav { height: 72px; border-radius: 20px 20px 0 0; padding: 5px 7px; } .bottom-nav button, .bottom-nav a { font-size: 11px; gap: 2px; } .nav-icon { width: 40px; height: 32px; }
+}
+@media (max-width: 380px) {
+  .brand-name { font-size: 23px; } .brand-logo, .brand-logo img { width: 40px; height: 40px; }
+  .stat { padding: 12px 10px; } .stat-content b { font-size: 29px; }
+  .action-copy b { font-size: 15px; } .action-copy span { font-size: 11px; }
 }
