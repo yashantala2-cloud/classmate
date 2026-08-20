@@ -22,6 +22,12 @@ export function useAllClasses() {
   return useLiveQuery(() => db.classes.orderBy('createdAt').toArray(), []) ?? []
 }
 
+/** Like useAllClasses, but stays `undefined` while loading instead of defaulting to
+ * `[]` — for callers that must not treat "still loading" as "loaded, zero classes". */
+export function useAllClassesLoaded() {
+  return useLiveQuery(() => db.classes.orderBy('createdAt').toArray(), [])
+}
+
 export function useStudents(classId: string | null | undefined) {
   return (
     useLiveQuery(async () => {

@@ -1,3 +1,5 @@
+export const MAX_CLASSES = 2
+
 export type ExamType = 'sessional1' | 'sessional2' | 'sessional3' | 'final'
 
 export const EXAM_TYPES: ExamType[] = ['sessional1', 'sessional2', 'sessional3', 'final']

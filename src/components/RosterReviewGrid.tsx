@@ -1,9 +1,12 @@
 import { useState } from 'react'
+import { X } from 'lucide-react'
 
 export interface RosterRow {
   rollNo: string
   name: string
 }
+
+const GRID_COLS = '4.5rem 1fr 2.5rem'
 
 /**
  * Editable roll-number + name table shown after parsing a roster PDF/Excel.
@@ -32,55 +35,46 @@ export default function RosterReviewGrid({
 
   return (
     <div>
-      <p className="text-sm text-ink-dim mb-3">
+      <p className="help" style={{ marginBottom: 16 }}>
         Check every row below — automatic reading makes mistakes. Fix, add, or remove rows, then confirm.
       </p>
 
-      <div className="border border-paper-line rounded-lg overflow-hidden">
-        <div className="grid grid-cols-[4.5rem_1fr_2.5rem] bg-paper-dim text-xs font-semibold uppercase tracking-wide text-ink-dim px-3 py-2">
+      <div className="review-table">
+        <div className="review-table-head" style={{ gridTemplateColumns: GRID_COLS }}>
           <span>Roll No</span>
           <span>Name</span>
           <span />
         </div>
-        <div className="max-h-[50vh] overflow-y-auto">
+        <div style={{ maxHeight: '50vh', overflowY: 'auto' }}>
           {rows.map((row, i) => (
-            <div key={i} className="grid grid-cols-[4.5rem_1fr_2.5rem] ledger-row items-center">
-              <input
-                value={row.rollNo}
-                onChange={(e) => update(i, 'rollNo', e.target.value)}
-                inputMode="numeric"
-                className="px-3 py-2 text-sm bg-transparent outline-none focus:bg-gold-200/30"
-              />
-              <input
-                value={row.name}
-                onChange={(e) => update(i, 'name', e.target.value)}
-                className="px-3 py-2 text-sm bg-transparent outline-none focus:bg-gold-200/30 min-w-0"
-              />
+            <div key={i} className="review-row" style={{ gridTemplateColumns: GRID_COLS }}>
+              <input value={row.rollNo} onChange={(e) => update(i, 'rollNo', e.target.value)} inputMode="numeric" />
+              <input value={row.name} onChange={(e) => update(i, 'name', e.target.value)} style={{ minWidth: 0 }} />
               <button
                 onClick={() => remove(i)}
                 aria-label="Remove row"
-                className="text-ink-faint hover:text-maroon-700 text-lg"
+                style={{ border: 0, background: 'transparent', color: 'var(--muted)', display: 'grid', placeItems: 'center' }}
               >
-                &times;
+                <X size={18} />
               </button>
             </div>
           ))}
         </div>
       </div>
 
-      <button
-        onClick={addRow}
-        className="mt-2 text-sm font-medium text-navy-800 hover:text-navy-700"
-      >
+      <button onClick={addRow} className="btn-secondary" style={{ border: 'none', color: 'var(--navy)', marginTop: 10, width: 'max-content' }}>
         + Add row
       </button>
 
-      <div className="mt-5 flex items-center justify-between">
-        <p className="text-sm text-ink-dim">{validCount} of {rows.length} rows valid</p>
+      <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <p className="help">
+          {validCount} of {rows.length} rows valid
+        </p>
         <button
           onClick={() => onConfirm(rows.filter((r) => r.rollNo.trim() && r.name.trim()))}
           disabled={validCount === 0}
-          className="bg-navy-900 text-white px-5 py-2.5 rounded-lg font-medium disabled:opacity-40"
+          className="save"
+          style={{ width: 'max-content', opacity: validCount === 0 ? 0.4 : 1 }}
         >
           Confirm & save
         </button>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { BarChart3, ChevronDown, Trophy, UserRound, Check } from 'lucide-react'
 import { db } from '../db/db'
 import { useActiveClass, useExams, useMarksForExam, useProfile, useStudents, useSubjects } from '../hooks/useAppData'
 import { EXAM_LABELS, EXAM_TYPES, type ExamType } from '../types'
@@ -8,6 +9,7 @@ import { computeAggregateRanking, computeRanking, type RankRow } from '../lib/ra
 import type { MarkEntry } from '../types'
 
 const OVERALL = '__overall__'
+const AVATAR_TONES = ['a0', 'a1', 'a2', 'a3', 'a4']
 
 export default function Rankings() {
   const [params] = useSearchParams()
@@ -34,9 +36,7 @@ export default function Rankings() {
     return map
   }, [subjectId, overallExamIds.join(',')]) ?? new Map<string, Map<string, MarkEntry>>()
 
-  const examCredits = new Map(
-    exams.map((e) => [e.id, subjects.find((s) => s.id === e.subjectId)?.credits ?? 1]),
-  )
+  const examCredits = new Map(exams.map((e) => [e.id, subjects.find((s) => s.id === e.subjectId)?.credits ?? 1]))
 
   let rankRows: RankRow[] = []
   let title = ''
@@ -50,18 +50,25 @@ export default function Rankings() {
 
   const myRow = rankRows.find((r) => r.rollNo === profile?.rollNo)
 
-  if (!activeClass) return <p className="text-ink-dim">Set up a class first.</p>
-  if (students.length === 0) return <p className="text-ink-dim">Add your class roster first.</p>
+  if (!activeClass) return <EmptyState text="Set up a class first." />
+  if (students.length === 0) return <EmptyState text="Add your class roster first." />
 
   return (
-    <div className="pt-2">
-      <h1 className="text-xl font-display font-semibold text-navy-900 mb-4">Ranking</h1>
+    <main className="screen">
+      <section className="page-heading">
+        <div className="heading-icon gold">
+          <Trophy size={24} />
+        </div>
+        <h1>Ranking</h1>
+      </section>
 
-      <div className="flex gap-2 mb-3">
+      <div style={{ position: 'relative' }}>
+        <BarChart3 size={22} style={{ position: 'absolute', left: 20, top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)', pointerEvents: 'none' }} />
         <select
           value={subjectId}
           onChange={(e) => setSubjectId(e.target.value)}
-          className="flex-1 border border-paper-line rounded-lg px-3 py-2.5 text-sm bg-white outline-none focus:border-navy-700"
+          className="select"
+          style={{ appearance: 'none', paddingLeft: 54, paddingRight: 46 }}
         >
           <option value={OVERALL}>Overall (all subjects)</option>
           {subjects.map((s) => (
@@ -70,70 +77,77 @@ export default function Rankings() {
             </option>
           ))}
         </select>
+        <ChevronDown size={22} style={{ position: 'absolute', right: 20, top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)', pointerEvents: 'none' }} />
       </div>
+
       {subjectId === OVERALL && (
-        <p className="text-xs text-ink-faint mb-3">
+        <p className="help" style={{ marginTop: 12 }}>
           Rank order is weighted by each subject's credits. Marks shown are always the actual total scored.
         </p>
       )}
-      <div className="flex flex-wrap gap-1.5 mb-4">
+
+      <div className="chips">
         {EXAM_TYPES.map((t) => (
-          <button
-            key={t}
-            onClick={() => setExamType(t)}
-            className={`text-xs px-3 py-1.5 rounded-full border ${
-              examType === t ? 'bg-navy-900 text-white border-navy-900' : 'border-paper-line text-ink-dim'
-            }`}
-          >
+          <button key={t} className={examType === t ? 'selected' : ''} onClick={() => setExamType(t)}>
             {EXAM_LABELS[t]}
           </button>
         ))}
       </div>
 
       {rankRows.length === 0 || rankRows.every((r) => r.marks === null) ? (
-        <p className="text-sm text-ink-dim mt-6">No marks uploaded yet for {title || 'this selection'}.</p>
+        <p className="help" style={{ marginTop: 20 }}>
+          No marks uploaded yet for {title || 'this selection'}.
+        </p>
       ) : (
         <>
           {myRow && myRow.rank !== null && (
-            <div className="bg-navy-900 text-white rounded-xl p-4 mb-4 flex items-center justify-between">
+            <section className="rank-summary">
               <div>
-                <p className="text-xs text-gold-400 uppercase tracking-wide">Your rank</p>
-                <p className="text-2xl font-display font-semibold">#{myRow.rank}</p>
+                <label>YOUR RANK</label>
+                <strong>#{myRow.rank}</strong>
+                <span>
+                  <UserRound size={16} /> Out of {students.length} students
+                </span>
               </div>
-              <div className="text-right">
-                <p className="text-xs text-gold-400 uppercase tracking-wide">Your marks</p>
-                <p className="text-2xl font-display font-semibold">{myRow.marks}</p>
+              <div className="divider" />
+              <div>
+                <label>YOUR MARKS</label>
+                <strong>{myRow.marks}</strong>
+                <span className="good">
+                  <Check size={16} /> Keep it up!
+                </span>
               </div>
-            </div>
+              <Trophy className="summary-trophy" size={115} />
+            </section>
           )}
 
-          <div className="border border-paper-line rounded-lg overflow-hidden bg-white">
-            <div className="grid grid-cols-[3rem_1fr_4rem_3.5rem] bg-paper-dim text-xs font-semibold uppercase tracking-wide text-ink-dim px-3 py-2">
-              <span>Rank</span>
-              <span>Name</span>
-              <span>Roll</span>
-              <span className="text-right">Marks</span>
+          <section className="leaderboard">
+            <div className="table-head">
+              <b>RANK</b>
+              <b>NAME</b>
+              <b>ROLL</b>
+              <b>MARKS</b>
             </div>
-            <div className="max-h-[60vh] overflow-y-auto">
-              {rankRows.map((r) => (
-                <div
-                  key={r.rollNo}
-                  className={`grid grid-cols-[3rem_1fr_4rem_3.5rem] ledger-row items-center px-0 ${
-                    r.rollNo === profile?.rollNo ? 'bg-gold-200/45' : ''
-                  }`}
-                >
-                  <span className="px-3 py-2 text-sm font-medium text-ink-dim">{r.rank ?? '—'}</span>
-                  <span className="px-2 py-2 text-sm truncate">{r.name}</span>
-                  <span className="px-2 py-2 text-sm text-ink-faint">{r.rollNo}</span>
-                  <span className="px-3 py-2 text-sm text-right font-medium">
-                    {r.absent ? <span className="text-critical">AB</span> : r.marks ?? '—'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+            {rankRows.map((r, i) => (
+              <div key={r.rollNo} className={`student-row ${r.rollNo === profile?.rollNo ? 'me' : ''}`}>
+                <span className={`rank ${r.rank !== null && r.rank <= 3 ? `medal m${r.rank}` : ''}`}>{r.rank ?? '—'}</span>
+                <span className={`avatar ${AVATAR_TONES[i % AVATAR_TONES.length]}`}>{r.name.charAt(0).toUpperCase()}</span>
+                <span className="student-name">{r.name}</span>
+                <span className="roll-cell">{r.rollNo}</span>
+                <strong>{r.absent ? 'AB' : (r.marks ?? '—')}</strong>
+              </div>
+            ))}
+          </section>
         </>
       )}
-    </div>
+    </main>
+  )
+}
+
+function EmptyState({ text }: { text: string }) {
+  return (
+    <main className="screen">
+      <p className="help">{text}</p>
+    </main>
   )
 }

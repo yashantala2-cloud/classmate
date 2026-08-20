@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { BookOpen, X } from 'lucide-react'
 import { db, uid } from '../db/db'
 import { useActiveClass, useExams, useSubjects } from '../hooks/useAppData'
 import { EXAM_LABELS, EXAM_TYPES } from '../types'
@@ -47,95 +48,85 @@ export default function Subjects() {
   }
 
   if (!activeClass) {
-    return <p className="text-ink-dim">Set up a class first.</p>
+    return (
+      <main className="screen">
+        <p className="help">Set up a class first.</p>
+      </main>
+    )
   }
 
   return (
-    <div className="pt-2">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-display font-semibold text-navy-900">Subjects</h1>
-        <button onClick={() => setAdding(true)} className="text-sm font-medium text-navy-800">
+    <main className="screen">
+      <section className="page-heading" style={{ justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+          <div className="heading-icon purple">
+            <BookOpen size={24} />
+          </div>
+          <h1>Subjects</h1>
+        </div>
+        <button onClick={() => setAdding(true)} className="btn-secondary" style={{ border: 'none', color: 'var(--navy)', width: 'max-content', fontSize: 16 }}>
           + Add subject
         </button>
-      </div>
+      </section>
 
       {adding && (
-        <div className="border border-paper-line rounded-lg p-3 bg-white mb-4 space-y-2">
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Subject name, e.g. Full Stack Development"
-            autoFocus
-            className="w-full border border-paper-line rounded-md px-3 py-2 text-sm outline-none focus:border-navy-700"
-          />
-          <input
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            placeholder="Subject code (optional)"
-            className="w-full border border-paper-line rounded-md px-3 py-2 text-sm outline-none focus:border-navy-700"
-          />
+        <div className="card" style={{ display: 'grid', gap: 12, marginBottom: 20 }}>
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Subject name, e.g. Full Stack Development" autoFocus className="field-input" />
+          <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="Subject code (optional)" className="field-input" />
           <div>
-            <label className="block text-xs font-medium text-ink-dim mb-1">Credits</label>
+            <label className="field-block-label">Credits</label>
             <input
               value={credits}
               onChange={(e) => setCredits(e.target.value.replace(/[^\d.]/g, ''))}
               inputMode="decimal"
               placeholder="1"
-              className="w-24 border border-paper-line rounded-md px-3 py-2 text-sm outline-none focus:border-navy-700"
+              className="field-input"
+              style={{ width: 100 }}
             />
-            <p className="text-xs text-ink-faint mt-1">Weights this subject in the Overall ranking only.</p>
+            <p className="help" style={{ marginTop: 6 }}>Weights this subject in the Overall ranking only.</p>
           </div>
-          <div className="flex gap-2">
-            <button onClick={addSubject} className="bg-navy-900 text-white text-sm font-medium px-4 py-2 rounded-md">
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button onClick={addSubject} className="save">
               Save
             </button>
-            <button onClick={() => setAdding(false)} className="text-sm text-ink-dim px-3 py-2">
+            <button onClick={() => setAdding(false)} className="btn-secondary" style={{ border: 'none', color: 'var(--muted)', width: 'max-content' }}>
               Cancel
             </button>
           </div>
         </div>
       )}
 
-      {subjects.length === 0 && !adding && (
-        <p className="text-sm text-ink-dim">No subjects yet. Add each subject you're taking this semester.</p>
-      )}
+      {subjects.length === 0 && !adding && <p className="help">No subjects yet. Add each subject you're taking this semester.</p>}
 
-      <div className="space-y-3">
+      <div style={{ display: 'grid', gap: 14 }}>
         {subjects.map((s) => {
           const subjectExams = exams.filter((e) => e.subjectId === s.id)
           return (
-            <div key={s.id} className="border border-paper-line rounded-lg bg-white p-3.5">
-              <div className="flex items-start justify-between">
+            <div key={s.id} className="subject-card">
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                 <div>
-                  <p className="font-medium">{s.name}</p>
-                  {s.code && <p className="text-xs text-ink-faint">{s.code}</p>}
+                  <p style={{ fontWeight: 600, fontSize: 18 }}>{s.name}</p>
+                  {s.code && <p className="help">{s.code}</p>}
                 </div>
-                <button onClick={() => removeSubject(s.id)} className="text-ink-faint hover:text-maroon-700 text-sm">
-                  Remove
+                <button onClick={() => removeSubject(s.id)} style={{ border: 0, background: 'transparent', color: 'var(--muted)' }} aria-label="Remove subject">
+                  <X size={18} />
                 </button>
               </div>
-              <label className="flex items-center gap-1.5 mt-2 text-xs text-ink-dim">
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, fontSize: 14, color: 'var(--muted)' }}>
                 Credits
                 <input
                   defaultValue={s.credits ?? 1}
                   onBlur={(e) => updateCredits(s.id, e.target.value)}
                   inputMode="decimal"
-                  className="w-14 border border-paper-line rounded px-1.5 py-0.5 text-xs outline-none focus:border-navy-700"
+                  className="field-input"
+                  style={{ width: 56, height: 36, padding: '0 10px', fontSize: 14 }}
                 />
               </label>
-              <div className="flex flex-wrap gap-1.5 mt-3">
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
                 {EXAM_TYPES.map((type) => {
                   const exam = subjectExams.find((e) => e.type === type)
                   return (
-                    <button
-                      key={type}
-                      onClick={() => navigate(`/upload?subjectId=${s.id}&examType=${type}`)}
-                      className={`text-xs px-2.5 py-1.5 rounded-full border ${
-                        exam
-                          ? 'bg-navy-900 text-white border-navy-900'
-                          : 'border-paper-line text-ink-dim'
-                      }`}
-                    >
+                    <button key={type} onClick={() => navigate(`/upload?subjectId=${s.id}&examType=${type}`)} className={`exam-pill ${exam ? 'done' : ''}`}>
                       {EXAM_LABELS[type]}
                     </button>
                   )
@@ -145,6 +136,6 @@ export default function Subjects() {
           )
         })}
       </div>
-    </div>
+    </main>
   )
 }

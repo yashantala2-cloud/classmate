@@ -1,12 +1,6 @@
 import { useState } from 'react'
-import {
-  backupToCloud,
-  getCloudSession,
-  requestOtp,
-  restoreFromCloud,
-  signOutCloud,
-  verifyOtp,
-} from '../lib/cloudSync'
+import { CloudUpload, Mail } from 'lucide-react'
+import { backupToCloud, getCloudSession, requestOtp, restoreFromCloud, signOutCloud, verifyOtp } from '../lib/cloudSync'
 
 type Step = 'signed-out' | 'awaiting-code'
 
@@ -84,77 +78,63 @@ export default function CloudSyncPanel() {
   }
 
   return (
-    <div>
-      <h2 className="font-display font-semibold text-navy-900 mb-3">Cloud Sync</h2>
-      <p className="text-sm text-ink-dim mb-2.5">
+    <section className="backup-card">
+      <div className="section-title">
+        <CloudUpload size={24} />
+        <h2>Cloud Sync</h2>
+      </div>
+      <p>
         Optional. Sign in to back up your own profile, classes, and marks so you can restore them on a new phone.
         Nothing syncs unless you sign in and choose to back up.
       </p>
 
       {session ? (
-        <div className="border border-paper-line rounded-lg bg-white p-3.5 space-y-2.5">
-          <p className="text-sm">
-            Signed in as <span className="font-medium">{session.email}</span>
+        <div style={{ display: 'grid', gap: 12 }}>
+          <p style={{ fontSize: 15 }}>
+            Signed in as <b>{session.email}</b>
           </p>
-          <div className="flex gap-2">
-            <button
-              onClick={handleBackup}
-              disabled={!!busy}
-              className="flex-1 bg-navy-900 text-white text-sm font-medium px-3.5 py-2.5 rounded-lg disabled:opacity-50"
-            >
+          <div className="backup-actions">
+            <button onClick={handleBackup} disabled={!!busy}>
               Backup now
             </button>
-            <button
-              onClick={handleRestore}
-              disabled={!!busy}
-              className="flex-1 border border-paper-line text-sm font-medium px-3.5 py-2.5 rounded-lg disabled:opacity-50"
-            >
+            <button onClick={handleRestore} disabled={!!busy}>
               Restore
             </button>
           </div>
-          <button onClick={handleSignOut} className="text-sm text-ink-dim">
+          <button onClick={handleSignOut} className="btn-secondary" style={{ border: 'none', color: 'var(--muted)', width: 'max-content' }}>
             Sign out
           </button>
         </div>
       ) : (
-        <div className="border border-paper-line rounded-lg bg-white p-3.5 space-y-2.5">
+        <div style={{ display: 'grid', gap: 12 }}>
           {step === 'signed-out' && (
             <>
-              <input
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                type="email"
-                placeholder="you@example.com"
-                className="w-full border border-paper-line rounded-md px-3 py-2 text-sm outline-none focus:border-navy-700"
-              />
-              <button
-                onClick={sendCode}
-                disabled={!!busy || !email.trim()}
-                className="bg-navy-900 text-white text-sm font-medium px-4 py-2 rounded-md disabled:opacity-50"
-              >
+              <div className="input-wrap">
+                <Mail size={21} />
+                <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="you@example.com" />
+              </div>
+              <button onClick={sendCode} disabled={!!busy || !email.trim()} className="save" style={{ width: 'max-content', opacity: !email.trim() ? 0.5 : 1 }}>
                 Send code
               </button>
             </>
           )}
           {step === 'awaiting-code' && (
             <>
-              <p className="text-sm text-ink-dim">Enter the 6-digit code sent to {email}</p>
-              <input
-                value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                inputMode="numeric"
-                placeholder="123456"
-                className="w-full border border-paper-line rounded-md px-3 py-2 text-sm outline-none focus:border-navy-700 tracking-widest"
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={confirmCode}
-                  disabled={!!busy || code.length !== 6}
-                  className="bg-navy-900 text-white text-sm font-medium px-4 py-2 rounded-md disabled:opacity-50"
-                >
+              <p className="help">Enter the 6-digit code sent to {email}</p>
+              <div className="input-wrap">
+                <input
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  inputMode="numeric"
+                  placeholder="123456"
+                  style={{ letterSpacing: 4 }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button onClick={confirmCode} disabled={!!busy || code.length !== 6} className="save" style={{ width: 'max-content', opacity: code.length !== 6 ? 0.5 : 1 }}>
                   Verify
                 </button>
-                <button onClick={() => setStep('signed-out')} className="text-sm text-ink-dim px-3 py-2">
+                <button onClick={() => setStep('signed-out')} className="btn-secondary" style={{ border: 'none', color: 'var(--muted)', width: 'max-content' }}>
                   Cancel
                 </button>
               </div>
@@ -163,9 +143,9 @@ export default function CloudSyncPanel() {
         </div>
       )}
 
-      {busy && <p className="text-xs text-ink-dim mt-2">{busy}</p>}
-      {message && <p className="text-xs text-good mt-2">{message}</p>}
-      {error && <p className="text-xs text-critical mt-2">{error}</p>}
-    </div>
+      {busy && <p className="help" style={{ marginTop: 12 }}>{busy}</p>}
+      {message && <p style={{ marginTop: 12, fontSize: 14, color: 'var(--green)' }}>{message}</p>}
+      {error && <p style={{ marginTop: 12, fontSize: 14, color: '#bf3037' }}>{error}</p>}
+    </section>
   )
 }

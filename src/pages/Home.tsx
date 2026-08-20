@@ -1,4 +1,14 @@
 import { Link } from 'react-router-dom'
+import {
+  BookOpen,
+  FileText,
+  ArrowRight,
+  Star,
+  Target,
+  CloudUpload,
+  Trophy,
+  TrendingUp,
+} from 'lucide-react'
 import { useActiveClass, useExams, useProfile, useStudents, useSubjects } from '../hooks/useAppData'
 
 export default function Home() {
@@ -9,35 +19,51 @@ export default function Home() {
   const exams = useExams(activeClass?.id)
 
   return (
-    <div className="pt-2">
-      <h1 className="text-xl font-display font-semibold text-navy-900">
-        {greeting()}, {profile?.name?.split(' ')[0] ?? 'there'}
-      </h1>
-      <p className="text-sm text-ink-dim mt-1">{activeClass?.name} · {students.length} students</p>
+    <main className="screen">
+      <section className="welcome">
+        <h1>
+          {greeting()}, {profile?.name?.split(' ')[0] ?? 'there'} <span>👋</span>
+        </h1>
+        <p>
+          {activeClass?.name} <i /> {students.length} students
+        </p>
+      </section>
 
-      <div className="grid grid-cols-2 gap-3 mt-5">
-        <StatCard label="Subjects" value={subjects.length} />
-        <StatCard label="Exams uploaded" value={exams.length} />
+      <div className="stats">
+        <StatCard icon={BookOpen} number={subjects.length} label="Subjects" tone="blue" to="/subjects" />
+        <StatCard icon={FileText} number={exams.length} label="Exams uploaded" tone="green" to="/rankings" />
       </div>
 
-      <div className="mt-6 space-y-2.5">
-        <ActionRow to="/subjects" title="Manage subjects" desc="Add subjects and see which exams have marks" />
-        <ActionRow to="/upload" title="Upload marks" desc="Add a sessional or final exam mark sheet" />
-        <ActionRow to="/rankings" title="View ranking" desc="See where you stand, overall or per subject" />
-        <ActionRow to="/progress" title="Track progress" desc="Your trend across sessionals and finals" />
-      </div>
+      <section className="actions">
+        <ActionCard to="/subjects" icon={BookOpen} title="Manage subjects" text="Add subjects and see which exams have marks" tone="purple" />
+        <ActionCard to="/upload" icon={CloudUpload} title="Upload marks" text="Add a sessional or final exam mark sheet" tone="green" />
+        <ActionCard to="/rankings" icon={Trophy} title="View ranking" text="See where you stand, overall or per subject" tone="orange" />
+        <ActionCard to="/progress" icon={TrendingUp} title="Track progress" text="Your trend across sessionals and finals" tone="blue" />
+      </section>
+
+      <section className="motivation">
+        <span className="motivation-icon">
+          <Star size={23} fill="currentColor" />
+        </span>
+        <div>
+          <b>Stay consistent!</b>
+          <p>Keep uploading your marks and track your progress to stay ahead.</p>
+        </div>
+        <Target className="target" size={72} />
+      </section>
 
       {subjects.length === 0 && (
-        <div className="mt-6 bg-gold-200/40 border border-gold-500/40 rounded-lg p-4">
-          <p className="text-sm text-ink">
-            Start by adding your subjects for this semester, then upload each exam's marks as they're published.
-          </p>
-          <Link to="/subjects" className="inline-block mt-2 text-sm font-semibold text-navy-800">
-            Add your first subject →
-          </Link>
-        </div>
+        <section className="motivation" style={{ marginTop: 20, background: '#fff8e6', borderColor: '#f0dca0' }}>
+          <div>
+            <b>Get started</b>
+            <p>Add your subjects for this semester, then upload each exam's marks as they're published.</p>
+            <Link to="/subjects" style={{ color: 'var(--navy)', fontWeight: 700, display: 'inline-block', marginTop: 8 }}>
+              Add your first subject →
+            </Link>
+          </div>
+        </section>
       )}
-    </div>
+    </main>
   )
 }
 
@@ -48,26 +74,58 @@ function greeting() {
   return 'Good evening'
 }
 
-function StatCard({ label, value }: { label: string; value: number }) {
+function StatCard({
+  icon: Icon,
+  number,
+  label,
+  tone,
+  to,
+}: {
+  icon: typeof BookOpen
+  number: number
+  label: string
+  tone: 'blue' | 'green'
+  to: string
+}) {
   return (
-    <div className="border border-paper-line rounded-lg bg-white p-3.5">
-      <p className="text-2xl font-display font-semibold text-navy-900">{value}</p>
-      <p className="text-xs text-ink-dim mt-0.5">{label}</p>
-    </div>
+    <Link to={to} className={`stat ${tone}`}>
+      <span className="stat-icon">
+        <Icon size={23} />
+      </span>
+      <span className="stat-content">
+        <b>{number}</b>
+        <span>{label}</span>
+        <small>
+          View all <ArrowRight size={13} />
+        </small>
+      </span>
+    </Link>
   )
 }
 
-function ActionRow({ to, title, desc }: { to: string; title: string; desc: string }) {
+function ActionCard({
+  to,
+  icon: Icon,
+  title,
+  text,
+  tone,
+}: {
+  to: string
+  icon: typeof BookOpen
+  title: string
+  text: string
+  tone: 'purple' | 'green' | 'orange' | 'blue'
+}) {
   return (
-    <Link
-      to={to}
-      className="flex items-center justify-between border border-paper-line rounded-lg bg-white px-4 py-3.5 hover:border-navy-700"
-    >
-      <div>
-        <p className="font-medium text-sm">{title}</p>
-        <p className="text-xs text-ink-dim mt-0.5">{desc}</p>
-      </div>
-      <span className="text-ink-faint">→</span>
+    <Link to={to} className="action-card">
+      <span className={`action-icon ${tone}`}>
+        <Icon size={26} />
+      </span>
+      <span className="action-copy">
+        <b>{title}</b>
+        <span>{text}</span>
+      </span>
+      <ArrowRight className="action-arrow" size={24} />
     </Link>
   )
 }

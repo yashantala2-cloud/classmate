@@ -36,7 +36,7 @@ export default function App() {
 
   if (location.pathname === '/onboarding') {
     return (
-      <div className="min-h-screen bg-paper px-4 max-w-2xl mx-auto">
+      <div className="app">
         <Onboarding />
       </div>
     )
@@ -44,7 +44,7 @@ export default function App() {
 
   return (
     <Layout>
-      <Suspense fallback={<p className="text-ink-dim pt-4">Loading…</p>}>
+      <Suspense fallback={<p className="help" style={{ padding: '38px 20px' }}>Loading…</p>}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/class-setup" element={<ClassSetup />} />

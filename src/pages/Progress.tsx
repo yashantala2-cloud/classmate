@@ -1,9 +1,13 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { TrendingUp, BookOpen, Code2, Network, Monitor, Calculator, FlaskConical } from 'lucide-react'
 import { db } from '../db/db'
 import { useActiveClass, useExams, useProfile, useSubjects } from '../hooks/useAppData'
 import { EXAM_LABELS, EXAM_TYPES, type MarkEntry } from '../types'
 import { classAverage } from '../lib/ranking'
-import MiniTrendChart, { TrendLegend, type TrendPoint } from '../components/MiniTrendChart'
+import MiniTrendChart, { type TrendPoint } from '../components/MiniTrendChart'
+
+const SUBJECT_ICONS = [Code2, Network, Monitor, BookOpen, Calculator, FlaskConical]
+const TONES = ['blue', 'green', 'orange', 'purple'] as const
 
 export default function Progress() {
   const profile = useProfile()
@@ -20,27 +24,31 @@ export default function Progress() {
     return map
   }, [examIds.join(',')])
 
-  if (!activeClass) return <p className="text-ink-dim">Set up a class first.</p>
-  if (subjects.length === 0) return <p className="text-ink-dim">Add a subject and upload marks to see progress.</p>
-  if (!profile?.rollNo) return <p className="text-ink-dim">Set your roll number in Settings first.</p>
-
-  const anyExams = exams.length > 0
+  if (!activeClass) return <EmptyState text="Set up a class first." />
+  if (subjects.length === 0) return <EmptyState text="Add a subject and upload marks to see progress." />
+  if (!profile?.rollNo) return <EmptyState text="Set your roll number in Settings first." />
 
   return (
-    <div className="pt-2">
-      <h1 className="text-xl font-display font-semibold text-navy-900 mb-1">Your Progress</h1>
-      <p className="text-sm text-ink-dim mb-4">Marks as a % of max marks, across exams this semester.</p>
+    <main className="screen">
+      <section className="page-heading progress-heading">
+        <div className="heading-icon blue">
+          <TrendingUp size={24} />
+        </div>
+        <div>
+          <h1>Your Progress</h1>
+          <p>Marks as a % of max marks, across exams this semester.</p>
+        </div>
+      </section>
 
-      {!anyExams && <p className="text-sm text-ink-dim mt-6">No marks uploaded yet.</p>}
-
-      <div className="space-y-5">
-        {subjects.map((subject) => {
+      <section className="progress-list">
+        {subjects.map((subject, i) => {
           const subjectExams = exams.filter((e) => e.subjectId === subject.id)
           if (subjectExams.length === 0) return null
 
           const points: TrendPoint[] = EXAM_TYPES.map((type) => {
             const exam = subjectExams.find((e) => e.type === type)
-            if (!exam) return { label: EXAM_LABELS[type].replace('Sessional ', 'S').replace('Final Exam', 'Final'), you: null, avg: null }
+            const label = EXAM_LABELS[type].replace('Sessional ', 'S').replace('Final Exam', 'Final')
+            if (!exam) return { label, you: null, avg: null }
 
             const marks = marksByExam?.get(exam.id) ?? []
             const mine = marks.find((m) => m.rollNo === profile.rollNo)
@@ -48,29 +56,41 @@ export default function Progress() {
             const avgRaw = classAverage(marks)
             const avg = avgRaw !== null ? (avgRaw / exam.maxMarks) * 100 : null
 
-            return {
-              label: EXAM_LABELS[type].replace('Sessional ', 'S').replace('Final Exam', 'Final'),
-              you,
-              avg,
-            }
+            return { label, you, avg }
           })
 
           if (points.every((p) => p.you === null && p.avg === null)) return null
 
+          const Icon = SUBJECT_ICONS[i % SUBJECT_ICONS.length]
+          const tone = TONES[i % TONES.length]
+
           return (
-            <div key={subject.id} className="border border-paper-line rounded-lg bg-white p-3.5">
-              <p className="font-medium mb-2">{subject.name}</p>
+            <article className="progress-card" key={subject.id}>
+              <div className={`subject-icon ${tone}`}>
+                <Icon size={25} />
+              </div>
+              <div className="subject-title">
+                <b>{subject.name}</b>
+                <span>
+                  <i className="legend-you" /> Your Marks <i className="legend-avg" /> Class Average
+                </span>
+              </div>
+              <button className={`details ${tone}`} type="button">
+                <TrendingUp size={17} /> View details
+              </button>
               <MiniTrendChart points={points} />
-            </div>
+            </article>
           )
         })}
-      </div>
+      </section>
+    </main>
+  )
+}
 
-      {anyExams && (
-        <div className="mt-4">
-          <TrendLegend />
-        </div>
-      )}
-    </div>
+function EmptyState({ text }: { text: string }) {
+  return (
+    <main className="screen">
+      <p className="help">{text}</p>
+    </main>
   )
 }

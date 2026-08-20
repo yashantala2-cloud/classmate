@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { CloudUpload, BookOpen, ChevronDown, FileText, Check, Hash, Camera } from 'lucide-react'
 import { db, uid } from '../db/db'
 import { useActiveClass, useStudents, useSubjects } from '../hooks/useAppData'
 import { EXAM_LABELS, EXAM_TYPES, type ExamType } from '../types'
@@ -10,6 +11,7 @@ import { pairRollsWithMarks } from '../lib/tableExtract'
 import MarksReviewGrid, { buildMarksRows, type MarksRow } from '../components/MarksReviewGrid'
 
 type Step = 'setup' | 'source' | 'review'
+const EXAM_ICON_TONES = ['', 'e1', 'e2', 'e3']
 
 export default function UploadMarks() {
   const [params] = useSearchParams()
@@ -91,21 +93,31 @@ export default function UploadMarks() {
     navigate(`/rankings?subjectId=${subjectId}&examType=${examType}`)
   }
 
-  if (!activeClass) return <p className="text-ink-dim">Set up a class first.</p>
-  if (students.length === 0) return <p className="text-ink-dim">Add your class roster first, from Class Setup.</p>
+  if (!activeClass) return <EmptyState text="Set up a class first." />
+  if (students.length === 0) return <EmptyState text="Add your class roster first, from Class Setup." />
 
   return (
-    <div className="pt-2">
-      <h1 className="text-xl font-display font-semibold text-navy-900 mb-4">Upload Marks</h1>
+    <main className="screen upload-screen">
+      <section className="page-heading upload-heading">
+        <div className="heading-icon purple">
+          <CloudUpload size={25} />
+        </div>
+        <div>
+          <h1>Upload Marks</h1>
+          <p>Select the details below to upload marks for your class.</p>
+        </div>
+      </section>
 
       {step === 'setup' && (
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-ink-dim mb-1.5">Subject</label>
+        <>
+          <label className="field-label">Subject</label>
+          <div style={{ position: 'relative' }}>
+            <BookOpen size={22} style={{ position: 'absolute', left: 20, top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)', pointerEvents: 'none' }} />
             <select
               value={subjectId}
               onChange={(e) => setSubjectId(e.target.value)}
-              className="w-full border border-paper-line rounded-lg px-3.5 py-3 text-base bg-white outline-none focus:border-navy-700"
+              className="select subject-select"
+              style={{ appearance: 'none', paddingLeft: 54, paddingRight: 46 }}
             >
               <option value="">Select subject…</option>
               {subjects.map((s) => (
@@ -114,61 +126,57 @@ export default function UploadMarks() {
                 </option>
               ))}
             </select>
+            <ChevronDown size={22} style={{ position: 'absolute', right: 20, top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)', pointerEvents: 'none' }} />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-ink-dim mb-1.5">Exam</label>
-            <div className="grid grid-cols-2 gap-2">
-              {EXAM_TYPES.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setExamType(t)}
-                  className={`px-3 py-2.5 rounded-lg text-sm font-medium border ${
-                    examType === t ? 'bg-navy-900 text-white border-navy-900' : 'border-paper-line text-ink-dim'
-                  }`}
-                >
-                  {EXAM_LABELS[t]}
-                </button>
-              ))}
-            </div>
+
+          <label className="field-label">Exam</label>
+          <div className="exam-grid">
+            {EXAM_TYPES.map((t, i) => (
+              <button key={t} className={`exam-card ${examType === t ? 'selected' : ''}`} onClick={() => setExamType(t)}>
+                <span className={`exam-icon ${EXAM_ICON_TONES[i]}`}>
+                  <FileText size={22} />
+                </span>
+                <span>{EXAM_LABELS[t]}</span>
+                {examType === t && <Check className="exam-check" size={22} />}
+              </button>
+            ))}
           </div>
-          <div>
-            <label className="block text-sm font-medium text-ink-dim mb-1.5">Max marks</label>
+
+          <label className="field-label">Max marks</label>
+          <div className="input-wrap">
+            <Hash size={23} />
             <input
               value={maxMarks}
               onChange={(e) => setMaxMarks(e.target.value.replace(/[^\d]/g, ''))}
               inputMode="numeric"
               placeholder="e.g. 30"
-              className="w-full border border-paper-line rounded-lg px-3.5 py-3 text-base outline-none focus:border-navy-700"
             />
           </div>
-          <button
-            onClick={() => subjectId && setStep('source')}
-            disabled={!subjectId}
-            className="w-full bg-navy-900 text-white font-medium py-3.5 rounded-lg disabled:opacity-40"
-          >
+          <p className="help">Enter the maximum possible marks for this exam.</p>
+
+          <button className="continue" disabled={!subjectId} onClick={() => subjectId && setStep('source')}>
             Continue
           </button>
-        </div>
+        </>
       )}
 
       {step === 'source' && (
-        <div className="space-y-4">
-          <p className="text-sm text-ink-dim">
-            Upload the marks sheet — a PDF, Excel file, or a clear photo of the printed sheet.
-          </p>
+        <div style={{ display: 'grid', gap: 16 }}>
+          <p className="help">Upload the marks sheet — a PDF, Excel file, or a clear photo of the printed sheet.</p>
           <input
             ref={fileInput}
             type="file"
             accept=".pdf,.xlsx,.xls,.csv,image/*"
-            className="hidden"
+            style={{ display: 'none' }}
             onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
           />
           <button
             onClick={() => fileInput.current?.click()}
             disabled={!!busy}
-            className="w-full border-2 border-dashed border-navy-700/40 rounded-lg px-4 py-8 text-navy-800 font-medium flex flex-col items-center gap-2"
+            className="card"
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '40px 20px', border: '2px dashed var(--line)', color: 'var(--navy)', fontWeight: 600, fontSize: 17 }}
           >
-            <span className="text-2xl">📷</span>
+            <Camera size={30} color="var(--purple)" />
             {busy ?? 'Choose PDF, Excel, or photo'}
           </button>
           <button
@@ -176,21 +184,30 @@ export default function UploadMarks() {
               setRows(buildMarksRows(students, new Map()))
               setStep('review')
             }}
-            className="w-full text-navy-800 font-medium py-2 text-sm"
+            className="btn-secondary"
+            style={{ border: 'none', color: 'var(--navy)' }}
           >
             Or enter marks by hand instead
           </button>
-          {error && <p className="text-sm text-critical">{error}</p>}
+          {error && <p style={{ color: '#bf3037', fontSize: 15 }}>{error}</p>}
         </div>
       )}
 
       {step === 'review' && (
         <div>
-          {error && <p className="text-sm text-critical mb-3">{error}</p>}
+          {error && <p style={{ color: '#bf3037', fontSize: 15, marginBottom: 12 }}>{error}</p>}
           <MarksReviewGrid initialRows={rows} maxMarks={Number(maxMarks) || null} onConfirm={confirmMarks} />
-          {busy && <p className="text-sm text-ink-dim mt-2">{busy}</p>}
+          {busy && <p className="help" style={{ marginTop: 10 }}>{busy}</p>}
         </div>
       )}
-    </div>
+    </main>
+  )
+}
+
+function EmptyState({ text }: { text: string }) {
+  return (
+    <main className="screen">
+      <p className="help">{text}</p>
+    </main>
   )
 }

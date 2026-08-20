@@ -21,8 +21,8 @@ export default defineConfig(({ command }) => {
           short_name: 'ClassMates',
           description:
             'Upload your class roster and exam marks, see your class ranking. 100% offline, no account needed.',
-          theme_color: '#0f2942',
-          background_color: '#faf7f0',
+          theme_color: '#0b2946',
+          background_color: '#f8f6ef',
           display: 'standalone',
           orientation: 'portrait',
           start_url: base,

@@ -1,24 +1,48 @@
-import { useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useRef, useState, type RefObject } from 'react'
+import { useNavigate, type NavigateFunction } from 'react-router-dom'
+import { GraduationCap, ArrowRight, FileText, Users } from 'lucide-react'
 import { db, uid } from '../db/db'
-import { useAllClasses, useProfile } from '../hooks/useAppData'
+import { useAllClassesLoaded, useProfile } from '../hooks/useAppData'
 import RosterReviewGrid, { type RosterRow } from '../components/RosterReviewGrid'
 import { extractPdfRows, extractRollNamePairs } from '../lib/pdfParser'
 import { extractRollNamePairsFromExcel } from '../lib/excelParser'
+import { MAX_CLASSES, type SchoolClass, type Profile } from '../types'
 
 type Step = 'pick' | 'name' | 'upload' | 'review'
 
 export default function ClassSetup() {
   const navigate = useNavigate()
   const profile = useProfile()
-  const classes = useAllClasses()
+  const loadedClasses = useAllClassesLoaded()
   const fileInput = useRef<HTMLInputElement>(null)
 
-  const [step, setStep] = useState<Step>(classes.length ? 'pick' : 'name')
+  // Still loading from IndexedDB — must not decide pick-vs-name yet, since
+  // `classes` briefly reads as empty for every user regardless of how many
+  // classes actually exist, which would bypass both the picker and its
+  // MAX_CLASSES limit for anyone who already had classes.
+  if (loadedClasses === undefined) return null
+
+  return <ClassSetupLoaded classes={loadedClasses} profile={profile} navigate={navigate} fileInput={fileInput} />
+}
+
+function ClassSetupLoaded({
+  classes,
+  profile,
+  navigate,
+  fileInput,
+}: {
+  classes: SchoolClass[]
+  profile: Profile | null | undefined
+  navigate: NavigateFunction
+  fileInput: RefObject<HTMLInputElement | null>
+}) {
+  const [step, setStep] = useState<Step>(classes.length > 0 ? 'pick' : 'name')
   const [className, setClassName] = useState('')
   const [parsedRows, setParsedRows] = useState<RosterRow[]>([])
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  const atClassLimit = classes.length >= MAX_CLASSES
 
   async function selectClass(classId: string) {
     if (!profile) return
@@ -53,12 +77,14 @@ export default function ClassSetup() {
   }
 
   async function confirmRoster(rows: RosterRow[]) {
+    if (atClassLimit) {
+      setError(`You can have up to ${MAX_CLASSES} classes at a time.`)
+      return
+    }
     setBusy('Saving…')
     const classId = uid()
     await db.classes.add({ id: classId, name: className.trim(), createdAt: Date.now() })
-    await db.students.bulkAdd(
-      rows.map((r) => ({ id: uid(), classId, rollNo: r.rollNo.trim(), name: r.name.trim() })),
-    )
+    await db.students.bulkAdd(rows.map((r) => ({ id: uid(), classId, rollNo: r.rollNo.trim(), name: r.name.trim() })))
     const current = profile ?? { id: 1 as const, rollNo: '', name: '', activeClassId: null }
     await db.profile.put({ ...current, activeClassId: classId })
     setBusy(null)
@@ -66,71 +92,52 @@ export default function ClassSetup() {
   }
 
   return (
-    <div className="pt-2">
-      <h1 className="text-xl font-display font-semibold text-navy-900 mb-1">Class Setup</h1>
+    <main className="screen">
+      <section className="page-heading">
+        <div className="heading-icon purple">
+          <Users size={24} />
+        </div>
+        <h1>Class Setup</h1>
+      </section>
 
       {step === 'pick' && (
-        <div className="mt-4 space-y-2">
-          <p className="text-sm text-ink-dim mb-2">Choose a class or add a new one.</p>
+        <div style={{ display: 'grid', gap: 10 }}>
+          <p className="help">Choose a class or add a new one.</p>
           {classes.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => selectClass(c.id)}
-              className="w-full text-left border border-paper-line rounded-lg px-4 py-3.5 bg-white hover:border-navy-700 flex items-center justify-between"
-            >
-              <span className="font-medium">{c.name}</span>
-              <span className="text-ink-faint">→</span>
+            <button key={c.id} onClick={() => selectClass(c.id)} className="class-card">
+              <GraduationCap size={23} />
+              <span>{c.name}</span>
+              <ArrowRight size={19} />
             </button>
           ))}
-          <button
-            onClick={() => setStep('name')}
-            className="w-full border-2 border-dashed border-paper-line rounded-lg px-4 py-3.5 text-navy-800 font-medium"
-          >
+          <button onClick={() => !atClassLimit && setStep('name')} className="add-class" disabled={atClassLimit}>
             + Add a new class
           </button>
+          {atClassLimit && <p className="class-limit-note">You can have up to {MAX_CLASSES} classes at a time.</p>}
         </div>
       )}
 
       {step === 'name' && (
-        <div className="mt-4 space-y-4">
-          <p className="text-sm text-ink-dim">
-            Name your class the way your department would recognize it, e.g. "IT 5 E".
-          </p>
-          <input
-            value={className}
-            onChange={(e) => setClassName(e.target.value)}
-            placeholder="e.g. IT 5 E"
-            autoFocus
-            className="w-full border border-paper-line rounded-lg px-3.5 py-3 text-base outline-none focus:border-navy-700"
-          />
-          <button
-            onClick={() => className.trim() && setStep('upload')}
-            disabled={!className.trim()}
-            className="w-full bg-navy-900 text-white font-medium py-3.5 rounded-lg disabled:opacity-40"
-          >
+        <div style={{ display: 'grid', gap: 16 }}>
+          <p className="help">Name your class the way your department would recognize it, e.g. "IT 5 E".</p>
+          <input value={className} onChange={(e) => setClassName(e.target.value)} placeholder="e.g. IT 5 E" autoFocus className="field-input" />
+          <button onClick={() => className.trim() && setStep('upload')} disabled={!className.trim()} className="continue">
             Continue
           </button>
         </div>
       )}
 
       {step === 'upload' && (
-        <div className="mt-4 space-y-4">
-          <p className="text-sm text-ink-dim">
-            Upload your class roll number list — a PDF or Excel sheet with roll numbers and names.
-          </p>
-          <input
-            ref={fileInput}
-            type="file"
-            accept=".pdf,.xlsx,.xls,.csv"
-            className="hidden"
-            onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
-          />
+        <div style={{ display: 'grid', gap: 16 }}>
+          <p className="help">Upload your class roll number list — a PDF or Excel sheet with roll numbers and names.</p>
+          <input ref={fileInput} type="file" accept=".pdf,.xlsx,.xls,.csv" style={{ display: 'none' }} onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
           <button
             onClick={() => fileInput.current?.click()}
             disabled={!!busy}
-            className="w-full border-2 border-dashed border-navy-700/40 rounded-lg px-4 py-8 text-navy-800 font-medium flex flex-col items-center gap-2"
+            className="card"
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '40px 20px', border: '2px dashed var(--line)', color: 'var(--navy)', fontWeight: 600, fontSize: 17 }}
           >
-            <span className="text-2xl">📄</span>
+            <FileText size={30} color="var(--purple)" />
             {busy ?? 'Choose PDF or Excel file'}
           </button>
           <button
@@ -138,21 +145,22 @@ export default function ClassSetup() {
               setParsedRows([{ rollNo: '', name: '' }])
               setStep('review')
             }}
-            className="w-full text-navy-800 font-medium py-2 text-sm"
+            className="btn-secondary"
+            style={{ border: 'none', color: 'var(--navy)' }}
           >
             Or add students by hand instead
           </button>
-          {error && <p className="text-sm text-critical">{error}</p>}
+          {error && <p style={{ color: '#bf3037', fontSize: 15 }}>{error}</p>}
         </div>
       )}
 
       {step === 'review' && (
-        <div className="mt-4">
-          {error && <p className="text-sm text-critical mb-3">{error}</p>}
+        <div>
+          {error && <p style={{ color: '#bf3037', fontSize: 15, marginBottom: 12 }}>{error}</p>}
           <RosterReviewGrid initialRows={parsedRows} onConfirm={confirmRoster} />
-          {busy && <p className="text-sm text-ink-dim mt-2">{busy}</p>}
+          {busy && <p className="help" style={{ marginTop: 10 }}>{busy}</p>}
         </div>
       )}
-    </div>
+    </main>
   )
 }

@@ -40,21 +40,21 @@ function StorageErrorScreen() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-paper px-6">
-      <div className="max-w-sm text-center">
-        <p className="text-4xl mb-3">⚠️</p>
-        <h1 className="font-display text-xl font-semibold text-navy-900 mb-2">Couldn't open local storage</h1>
-        <p className="text-sm text-ink-dim mb-5">
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8f6ef', padding: '0 24px', fontFamily: '"DM Sans", sans-serif' }}>
+      <div style={{ maxWidth: 380, textAlign: 'center' }}>
+        <p style={{ fontSize: 40, marginBottom: 10 }}>⚠️</p>
+        <h1 style={{ font: '700 22px "Playfair Display", serif', color: '#0b2946', margin: '0 0 8px' }}>Couldn't open local storage</h1>
+        <p style={{ fontSize: 15, color: '#657286', marginBottom: 20, lineHeight: 1.5 }}>
           Your browser wouldn't let ClassMates access its local storage — this can happen if another tab has the
           app open, or storage is restricted (e.g. private browsing). Close other tabs of this app and try again.
           Only reset local data if trying again doesn't help — that permanently deletes everything saved on this
           device.
         </p>
-        <div className="flex flex-col gap-2.5">
-          <button onClick={() => location.reload()} className="bg-navy-900 text-white font-medium py-3 rounded-lg">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <button onClick={() => location.reload()} style={{ background: '#0b2946', color: '#fff', fontWeight: 600, padding: '12px 0', borderRadius: 12, border: 0 }}>
             Try again
           </button>
-          <button onClick={reset} className="border border-maroon-700/40 text-maroon-700 font-medium py-3 rounded-lg">
+          <button onClick={reset} style={{ border: '1px solid #ef7777', color: '#bf3037', background: '#fff7f7', fontWeight: 600, padding: '12px 0', borderRadius: 12 }}>
             Reset local data & retry
           </button>
         </div>

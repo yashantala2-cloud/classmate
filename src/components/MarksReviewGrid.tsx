@@ -16,6 +16,8 @@ export function buildMarksRows(students: Student[], parsed: Map<string, string>)
   })
 }
 
+const GRID_COLS = '3.5rem 1fr 4.5rem 3rem'
+
 /**
  * Editable roll-number + marks table, pre-filled from a best-effort PDF/OCR
  * parse against the known class roster. Every row must be confirmed before
@@ -41,40 +43,39 @@ export default function MarksReviewGrid({
 
   return (
     <div>
-      <p className="text-sm text-ink-dim mb-3">
+      <p className="help" style={{ marginBottom: 16 }}>
         Check every mark below — automatic reading makes mistakes, especially from photos. Mark absentees with AB.
       </p>
 
-      <div className="border border-paper-line rounded-lg overflow-hidden">
-        <div className="grid grid-cols-[4rem_1fr_5rem_3.5rem] bg-paper-dim text-xs font-semibold uppercase tracking-wide text-ink-dim px-3 py-2">
+      <div className="review-table">
+        <div className="review-table-head" style={{ gridTemplateColumns: GRID_COLS }}>
           <span>Roll</span>
           <span>Name</span>
           <span>Marks</span>
           <span>AB</span>
         </div>
-        <div className="max-h-[55vh] overflow-y-auto">
+        <div style={{ maxHeight: '55vh', overflowY: 'auto' }}>
           {rows.map((row, i) => (
             <div
               key={row.rollNo}
-              className={`grid grid-cols-[4rem_1fr_5rem_3.5rem] ledger-row items-center ${
-                !row.absent && row.marksRaw.trim() === '' ? 'bg-gold-200/70' : ''
-              }`}
+              className={`review-row ${!row.absent && row.marksRaw.trim() === '' ? 'needs-input' : ''}`}
+              style={{ gridTemplateColumns: GRID_COLS }}
             >
-              <span className="px-3 py-2 text-sm text-ink-dim">{row.rollNo}</span>
-              <span className="px-2 py-2 text-sm truncate">{row.name}</span>
+              <span style={{ color: 'var(--muted)', fontSize: 15 }}>{row.rollNo}</span>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 15 }}>{row.name}</span>
               <input
                 value={row.marksRaw}
                 onChange={(e) => update(i, { marksRaw: e.target.value.replace(/[^\d.]/g, ''), absent: false })}
                 disabled={row.absent}
                 inputMode="decimal"
-                className="px-2 py-2 text-sm bg-transparent outline-none focus:bg-gold-200/40 disabled:opacity-30 w-16"
+                style={{ opacity: row.absent ? 0.3 : 1 }}
               />
-              <label className="flex items-center justify-center py-2">
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <input
                   type="checkbox"
                   checked={row.absent}
                   onChange={(e) => update(i, { absent: e.target.checked, marksRaw: e.target.checked ? '' : row.marksRaw })}
-                  className="h-4 w-4 accent-maroon-700"
+                  style={{ width: 18, height: 18, accentColor: '#bf3037' }}
                 />
               </label>
             </div>
@@ -83,17 +84,16 @@ export default function MarksReviewGrid({
       </div>
 
       {overMax && (
-        <p className="mt-2 text-sm text-critical">
+        <p style={{ marginTop: 10, fontSize: 14, color: '#bf3037' }}>
           Some marks exceed the max marks ({maxMarks}) — double check those rows.
         </p>
       )}
 
-      <div className="mt-5 flex items-center justify-between gap-3">
-        <p className="text-sm text-ink-dim">{filledCount} of {rows.length} filled</p>
-        <button
-          onClick={() => onConfirm(rows)}
-          className="bg-navy-900 text-white px-5 py-2.5 rounded-lg font-medium"
-        >
+      <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <p className="help">
+          {filledCount} of {rows.length} filled
+        </p>
+        <button onClick={() => onConfirm(rows)} className="save" style={{ width: 'max-content' }}>
           Confirm & save
         </button>
       </div>
