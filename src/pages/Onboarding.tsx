@@ -25,7 +25,7 @@ export default function Onboarding() {
       <div className="bg-white border border-paper-line rounded-xl p-4 mb-6 space-y-2">
         <PrivacyLine icon="🔒" text="No login. No account. Nothing to sign up for." />
         <PrivacyLine icon="📱" text="All data — rosters, marks, rankings — stays only on this device." />
-        <PrivacyLine icon="☁️" text="Cloud backup is opt-in and coming later. Nothing leaves your phone until you choose to sync." />
+        <PrivacyLine icon="☁️" text="Cloud backup is opt-in, from Settings. Nothing leaves your phone unless you sign in and choose to sync." />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">

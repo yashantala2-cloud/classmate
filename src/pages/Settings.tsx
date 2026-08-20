@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { db } from '../db/db'
 import { useAllClasses, useProfile } from '../hooks/useAppData'
 import { clearAllData, downloadBackup, exportBackup, importBackup } from '../lib/backup'
+import CloudSyncPanel from '../components/CloudSyncPanel'
 import type { BackupFile } from '../types'
 
 export default function Settings() {
@@ -105,6 +106,8 @@ export default function Settings() {
         </div>
       </div>
 
+      <CloudSyncPanel />
+
       <div>
         <h2 className="font-display font-semibold text-navy-900 mb-3">Backup</h2>
         <p className="text-sm text-ink-dim mb-2.5">
@@ -157,7 +160,7 @@ export default function Settings() {
 
       <div className="pt-2 pb-4 text-center">
         <p className="text-xs text-ink-faint">
-          ClassMates is 100% offline — no account, no tracking, no server.
+          ClassMates works 100% offline. No account is required — cloud sync above is opt-in and off by default.
         </p>
         <a
           href="https://github.com/yashantala2-cloud/classmate"

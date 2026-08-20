@@ -44,15 +44,15 @@ This is the whole point of the app:
 
 - 🔒 **No login or sign-up.** Just enter your roll number and name once — that's how ClassMates knows which row is yours.
 - 📱 **All data is stored locally on your phone** — your class roster, every mark sheet you upload, every ranking. Nothing is uploaded anywhere.
-- ☁️ **Cloud sync is planned, not required.** A future version will let you optionally sign in to back up your data to the cloud. Until then, use **Settings → Export backup** to save a copy, or to hand your class's data to a classmate.
+- ☁️ **Cloud sync is optional, from Settings.** Sign in with just your email (a one-time code, no password) to back up your own profile/classes/marks so you can restore them on a new phone. Nothing syncs unless you sign in and tap Backup — you can also use **Settings → Export backup** for a local file instead, or to hand your class's data to a classmate.
 
 ## How it works
 
 1. **Set up your profile** — enter your roll number and name (once, ever).
 2. **Set up your class** — upload your class's roll number list as a PDF or Excel sheet. ClassMates reads it and lists every student; you review and fix anything it misread before saving.
-3. **Add your subjects** — one entry per subject for the semester.
+3. **Add your subjects** — one entry per subject for the semester, with its credit weight (used only for the Overall ranking below).
 4. **Upload marks** — for each subject, for each of the 3 sessionals and the final exam, upload the marks sheet your department publishes (PDF, Excel, or a photo of the printed sheet). ClassMates reads the roll numbers and marks automatically, then shows you an editable table to confirm or correct before saving — this matters most for photos, where misreads are common.
-5. **See your ranking** — per subject, per exam, or an overall ranking combining every subject. Your row is always highlighted.
+5. **See your ranking** — per subject, or an Overall ranking that weights each subject by its credits (a 5-credit subject counts for more than a 3-credit one) while still showing everyone's actual, unweighted marks total. Your row is always highlighted.
 6. **Track your progress** — your marks and the class average, side by side, across every exam this semester.
 
 ## Why review grids everywhere?
@@ -61,7 +61,7 @@ Reading a scanned or photographed marks sheet automatically will sometimes get i
 
 ## Tech notes
 
-Built as a single-page PWA: React + TypeScript + Vite, IndexedDB for local storage (via Dexie), on-device OCR (Tesseract.js) for photo uploads, and PDF/Excel parsing entirely in the browser — no backend, nothing to deploy, nothing that can see your data but you.
+Built as a single-page PWA: React + TypeScript + Vite, IndexedDB for local storage (via Dexie), on-device OCR (Tesseract.js) for photo uploads, and PDF/Excel parsing entirely in the browser. All of that runs with no backend at all. The one exception is the optional cloud sync feature — a small Cloudflare Worker + D1 database (repo: `classmate-api`) that only ever stores what you explicitly back up, under your own signed-in account, and nothing else.
 
 ## Development
 
