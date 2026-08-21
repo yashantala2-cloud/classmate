@@ -6,7 +6,6 @@ import {
   Save,
   Users,
   GraduationCap,
-  ArrowRight,
   CloudUpload,
   Download,
   AlertTriangle,
@@ -36,6 +35,7 @@ export default function Settings() {
   const [showClear, setShowClear] = useState(false)
   const [editingClassId, setEditingClassId] = useState<string | null>(null)
   const [editingClassName, setEditingClassName] = useState('')
+  const [pendingDeleteClass, setPendingDeleteClass] = useState<{ id: string; name: string } | null>(null)
 
   // profile loads async from IndexedDB — sync the form once it arrives.
   useEffect(() => {
@@ -67,6 +67,22 @@ export default function Settings() {
     if (!trimmed) return
     await db.classes.update(classId, { name: trimmed })
     setEditingClassId(null)
+  }
+
+  async function deleteClass(classId: string) {
+    const examIds = (await db.exams.where('classId').equals(classId).toArray()).map((e) => e.id)
+    await db.transaction('rw', [db.classes, db.students, db.subjects, db.exams, db.marks, db.profile], async () => {
+      await db.marks.where('examId').anyOf(examIds).delete()
+      await db.exams.where('classId').equals(classId).delete()
+      await db.subjects.where('classId').equals(classId).delete()
+      await db.students.where('classId').equals(classId).delete()
+      await db.classes.delete(classId)
+      if (profile?.activeClassId === classId) {
+        const nextActive = classes.find((c) => c.id !== classId)
+        await db.profile.put({ ...profile, activeClassId: nextActive?.id ?? null })
+      }
+    })
+    setPendingDeleteClass(null)
   }
 
   async function handleExport() {
@@ -146,10 +162,15 @@ export default function Settings() {
                 <span>{c.name}</span>
                 {profile?.activeClassId === c.id && <b>Active</b>}
               </button>
+              <button className="icon-btn" onClick={() => navigate(`/students?classId=${c.id}`)} aria-label={`Manage students in ${c.name}`}>
+                <Users size={17} />
+              </button>
               <button className="icon-btn" onClick={() => startEditingClass(c.id, c.name)} aria-label={`Edit ${c.name}`}>
                 <Pencil size={17} />
               </button>
-              <ArrowRight size={19} />
+              <button className="icon-btn danger" onClick={() => setPendingDeleteClass({ id: c.id, name: c.name })} aria-label={`Delete ${c.name}`}>
+                <Trash2 size={17} />
+              </button>
             </div>
           ),
         )}
@@ -211,6 +232,22 @@ export default function Settings() {
               <button onClick={() => setShowClear(false)}>Cancel</button>
               <button className="danger-btn" onClick={handleClear}>
                 Clear Data
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pendingDeleteClass && (
+        <div className="modal-backdrop">
+          <div className="modal">
+            <AlertTriangle size={40} />
+            <h3>Delete {pendingDeleteClass.name}?</h3>
+            <p>This will permanently delete this class along with its students, subjects, exams and marks. This action cannot be undone.</p>
+            <div>
+              <button onClick={() => setPendingDeleteClass(null)}>Cancel</button>
+              <button className="danger-btn" onClick={() => deleteClass(pendingDeleteClass.id)}>
+                Delete
               </button>
             </div>
           </div>

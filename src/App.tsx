@@ -8,6 +8,7 @@ import Subjects from './pages/Subjects'
 import Rankings from './pages/Rankings'
 import Progress from './pages/Progress'
 import Settings from './pages/Settings'
+import ManageStudents from './pages/ManageStudents'
 
 // These two pages pull in pdf.js / tesseract.js / xlsx (multiple MB combined) —
 // keep them out of the main bundle entirely, not just out of their parser modules.
@@ -31,7 +32,7 @@ export default function App() {
   // same write that created the profile): the very next render sees a
   // profile without an active class and correctly redirects onward, rather
   // than leaving the app stuck showing the onboarding form indefinitely.
-  const needsClass = profile && !profile.activeClassId && !['/class-setup', '/settings'].includes(location.pathname)
+  const needsClass = profile && !profile.activeClassId && !['/class-setup', '/settings', '/students'].includes(location.pathname)
   if (needsClass) return <Navigate to="/class-setup" replace />
 
   if (location.pathname === '/onboarding') {
@@ -53,6 +54,7 @@ export default function App() {
           <Route path="/rankings" element={<Rankings key={location.search} />} />
           <Route path="/progress" element={<Progress />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/students" element={<ManageStudents />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

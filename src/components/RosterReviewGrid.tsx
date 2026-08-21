@@ -15,9 +15,13 @@ const GRID_COLS = '4.5rem 1fr 2.5rem'
 export default function RosterReviewGrid({
   initialRows,
   onConfirm,
+  helpText = 'Check every row below — automatic reading makes mistakes. Fix, add, or remove rows, then confirm.',
+  confirmLabel = 'Confirm & save',
 }: {
   initialRows: RosterRow[]
   onConfirm: (rows: RosterRow[]) => void
+  helpText?: string
+  confirmLabel?: string
 }) {
   const [rows, setRows] = useState<RosterRow[]>(initialRows)
 
@@ -36,7 +40,7 @@ export default function RosterReviewGrid({
   return (
     <div>
       <p className="help" style={{ marginBottom: 16 }}>
-        Check every row below — automatic reading makes mistakes. Fix, add, or remove rows, then confirm.
+        {helpText}
       </p>
 
       <div className="review-table">
@@ -76,7 +80,7 @@ export default function RosterReviewGrid({
           className="save"
           style={{ width: 'max-content', opacity: validCount === 0 ? 0.4 : 1 }}
         >
-          Confirm & save
+          {confirmLabel}
         </button>
       </div>
     </div>
