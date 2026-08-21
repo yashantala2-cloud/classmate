@@ -181,6 +181,12 @@ button { cursor: pointer; }
 .class-card span { flex: 1; }
 .class-card b { color: #2563eb; }
 .class-card.active { border-color: #6c8fff; background: #f4f7ff; }
+.class-card-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 15px; border: 0; background: transparent; padding: 0; font: inherit; color: inherit; text-align: left; }
+.class-card-main span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.class-card .icon-btn { flex: 0 0 auto; border: 0; background: transparent; color: var(--muted); display: grid; place-items: center; padding: 6px; border-radius: 10px; }
+.class-card .icon-btn:hover { background: #f0f1f4; }
+.class-card.editing .icon-btn:first-of-type { color: var(--green); }
+.class-name-input { flex: 1; min-width: 0; height: 42px; border: 1px solid var(--navy2); border-radius: 10px; padding: 0 12px; font-size: 17px; outline: 0; }
 .add-class { width: 100%; height: 70px; border: 2px dashed #c7c9ff; background: transparent; border-radius: 18px; text-align: left; padding: 0 24px; color: #3546bd; font-size: 19px; }
 .add-class:disabled { opacity: .5; cursor: not-allowed; color: #8890c9; }
 .class-limit-note { color: var(--muted); font-size: 14px; margin: 10px 2px 0; }

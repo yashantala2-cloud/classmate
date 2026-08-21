@@ -13,6 +13,9 @@ import {
   Trash2,
   ExternalLink,
   ShieldCheck,
+  Pencil,
+  Check,
+  X as XIcon,
 } from 'lucide-react'
 import { db } from '../db/db'
 import { useAllClasses, useProfile } from '../hooks/useAppData'
@@ -31,6 +34,8 @@ export default function Settings() {
   const [saved, setSaved] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [showClear, setShowClear] = useState(false)
+  const [editingClassId, setEditingClassId] = useState<string | null>(null)
+  const [editingClassName, setEditingClassName] = useState('')
 
   // profile loads async from IndexedDB — sync the form once it arrives.
   useEffect(() => {
@@ -50,6 +55,18 @@ export default function Settings() {
   async function switchClass(classId: string) {
     if (!profile) return
     await db.profile.put({ ...profile, activeClassId: classId })
+  }
+
+  function startEditingClass(classId: string, currentName: string) {
+    setEditingClassId(classId)
+    setEditingClassName(currentName)
+  }
+
+  async function saveClassName(classId: string) {
+    const trimmed = editingClassName.trim()
+    if (!trimmed) return
+    await db.classes.update(classId, { name: trimmed })
+    setEditingClassId(null)
   }
 
   async function handleExport() {
@@ -104,14 +121,38 @@ export default function Settings() {
           <Users size={24} />
           <h2>Classes</h2>
         </div>
-        {classes.map((c) => (
-          <button key={c.id} onClick={() => switchClass(c.id)} className={`class-card ${profile?.activeClassId === c.id ? 'active' : ''}`}>
-            <GraduationCap size={23} />
-            <span>{c.name}</span>
-            {profile?.activeClassId === c.id && <b>Active</b>}
-            <ArrowRight size={19} />
-          </button>
-        ))}
+        {classes.map((c) =>
+          editingClassId === c.id ? (
+            <div key={c.id} className="class-card editing">
+              <GraduationCap size={23} />
+              <input
+                className="class-name-input"
+                value={editingClassName}
+                onChange={(e) => setEditingClassName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && saveClassName(c.id)}
+                autoFocus
+              />
+              <button className="icon-btn" onClick={() => saveClassName(c.id)} aria-label="Save class name">
+                <Check size={19} />
+              </button>
+              <button className="icon-btn" onClick={() => setEditingClassId(null)} aria-label="Cancel editing">
+                <XIcon size={19} />
+              </button>
+            </div>
+          ) : (
+            <div key={c.id} className={`class-card ${profile?.activeClassId === c.id ? 'active' : ''}`}>
+              <button className="class-card-main" onClick={() => switchClass(c.id)}>
+                <GraduationCap size={23} />
+                <span>{c.name}</span>
+                {profile?.activeClassId === c.id && <b>Active</b>}
+              </button>
+              <button className="icon-btn" onClick={() => startEditingClass(c.id, c.name)} aria-label={`Edit ${c.name}`}>
+                <Pencil size={17} />
+              </button>
+              <ArrowRight size={19} />
+            </div>
+          ),
+        )}
         <button onClick={() => !atClassLimit && navigate('/class-setup')} className="add-class" disabled={atClassLimit}>
           ＋ Add another class
         </button>

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BookOpen, X } from 'lucide-react'
+import { AlertTriangle, BookOpen, X } from 'lucide-react'
 import { db, uid } from '../db/db'
 import { useActiveClass, useExams, useSubjects } from '../hooks/useAppData'
 import { EXAM_LABELS, EXAM_TYPES } from '../types'
@@ -15,6 +15,7 @@ export default function Subjects() {
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
   const [credits, setCredits] = useState('1')
+  const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null)
 
   async function addSubject() {
     if (!activeClass || !name.trim()) return
@@ -45,6 +46,7 @@ export default function Subjects() {
       await db.exams.where('subjectId').equals(subjectId).delete()
       await db.subjects.delete(subjectId)
     })
+    setPendingDelete(null)
   }
 
   if (!activeClass) {
@@ -108,7 +110,7 @@ export default function Subjects() {
                   <p style={{ fontWeight: 600, fontSize: 18 }}>{s.name}</p>
                   {s.code && <p className="help">{s.code}</p>}
                 </div>
-                <button onClick={() => removeSubject(s.id)} style={{ border: 0, background: 'transparent', color: 'var(--muted)' }} aria-label="Remove subject">
+                <button onClick={() => setPendingDelete({ id: s.id, name: s.name })} style={{ border: 0, background: 'transparent', color: 'var(--muted)' }} aria-label="Remove subject">
                   <X size={18} />
                 </button>
               </div>
@@ -136,6 +138,22 @@ export default function Subjects() {
           )
         })}
       </div>
+
+      {pendingDelete && (
+        <div className="modal-backdrop">
+          <div className="modal">
+            <AlertTriangle size={40} />
+            <h3>Remove {pendingDelete.name}?</h3>
+            <p>This will permanently delete this subject along with all its exams and marks. This action cannot be undone.</p>
+            <div>
+              <button onClick={() => setPendingDelete(null)}>Cancel</button>
+              <button className="danger-btn" onClick={() => removeSubject(pendingDelete.id)}>
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }
